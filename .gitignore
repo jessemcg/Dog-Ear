@@ -1,0 +1,5 @@
+build-dir/
+__pycache__/
+.gen/
+.ruff_cache/
+.flatpak-builder/

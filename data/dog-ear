@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+echo "[dog-ear] starting…"
+exec /app/bin/python3 /app/share/io.github.jessemcgowan.DogEar/pdf_marker.py "$@"

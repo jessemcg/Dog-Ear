@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.jessemcgowan.DogEar</id>
+
+  <name>Dog Ear</name>
+  <summary>Bring order to your PDFs with the power of regular expressions</summary>
+
+  <developer id="io.github.jessemcgowan">
+    <name>Jesse McGowan</name>
+  </developer>
+
+  <metadata_license>MIT</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <description>
+    <p>Dog Ear automatically bookmarks PDF documents by matching user-supplied regular expressions to patterns in the text. The program requires a PDF file (or files) that already contain embedded text and a set of separate text files, each holding the desired regular expressions. For every PDF page, Dog Ear generates a numbered text file. It then applies each regular expression to every page file, compiles the matches into a table of contents file (TOC), and uses this TOC to add bookmarks to the original PDF. Bookmarks are grouped according to the name of the text file that supplied the matching regular expression.</p>
+    <p>Highlights:</p>
+    <ul>
+      <li>Quick creation of text files in memory</li>
+      <li>Access to text files for testing regular expressions</li>
+      <li>In-app text editor to modify the TOC before applying bookmarks</li>
+      <li>Optional post-processing hook (.sh or .py) for the TOC</li>
+    </ul>
+    <p>Dog Ear ships with sample PDFs, regular-expression text files, and a sample post-processing python script. These items are for demonstration and can easily be removed. Dog Ear works from a copy of your input PDFs that does not contain page objects. Thus, there is no need to remove existing bookmarks before adding them to the input directory.</p>
+  </description>
+
+  <launchable type="desktop-id">io.github.jessemcgowan.DogEar.desktop</launchable>
+
+  <!-- If you haven’t filled OARS yet, you can keep this line or remove it.
+       Flathub will require a full OARS block later. -->
+  <content_rating type="oars-1.1"/>
+
+  <!-- Optional: include at least one icon reference; the real themed icon
+       is provided by your app’s installed icon files. -->
+
+  <screenshots/>
+
+  <releases>
+    <release version="0.1.0" date="2025-08-22"/>
+  </releases>
+
+  <url type="homepage">https://github.com/jessemcgowan/PDFRegexMarker</url>
+</component>
+

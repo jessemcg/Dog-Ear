@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Dog Ear
+Comment=Bring order to your PDFs with the power of regular expressions
+Exec=dog-ear %U
+TryExec=dog-ear
+Icon=io.github.jessemcgowan.DogEar
+Terminal=false
+Type=Application
+Categories=Office;Utility;
+StartupNotify=true
+

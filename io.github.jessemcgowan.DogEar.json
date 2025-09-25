@@ -1,0 +1,193 @@
+{
+  "id": "io.github.jessemcgowan.DogEar",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "48",
+  "sdk": "org.gnome.Sdk",
+  "command": "dog-ear",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    "--socket=session-bus",
+    "--device=dri",
+    "--filesystem=xdg-download",
+    "--env=PYTHONNOUSERSITE=1"
+  ],
+
+  "modules": [
+    {
+      "name": "python3",
+      "buildsystem": "simple",
+      "build-commands": [
+        "tar -xf Python-3.12.10.tar.xz",
+        "cd Python-3.12.10 && ./configure --prefix=/app --enable-optimizations --with-ensurepip=install",
+        "cd Python-3.12.10 && make -j$(nproc)",
+        "cd Python-3.12.10 && make install"
+      ],
+      "sources": [
+        {
+          "type": "file",
+          "url": "https://www.python.org/ftp/python/3.12.10/Python-3.12.10.tar.xz",
+          "sha256": "07ab697474595e06f06647417d3c7fa97ded07afc1a7e4454c5639919b46eaea"
+        }
+      ]
+    },
+
+    {
+      "name": "poppler",
+      "buildsystem": "cmake-ninja",
+      "config-opts": [
+        "-DENABLE_CPP=ON",
+        "-DENABLE_UTILS=ON",
+        "-DENABLE_GTK_DOC=OFF",
+        "-DENABLE_GOBJECT_INTROSPECTION=OFF",
+        "-DENABLE_QT5=OFF",
+        "-DENABLE_QT6=OFF",
+        "-DENABLE_UNSTABLE_API_ABI_HEADERS=OFF",
+        "-DENABLE_LIBOPENJPEG=openjpeg2",
+        "-DENABLE_BOOST=OFF"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://gitlab.freedesktop.org/poppler/poppler.git",
+          "tag": "poppler-24.08.0"
+        }
+      ]
+    },
+
+    {
+      "name": "pycairo",
+      "buildsystem": "meson",
+      "config-opts": [
+        "-Dpython=python3"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/source/p/pycairo/pycairo-1.26.0.tar.gz",
+          "sha256": "2dddd0a874fbddb21e14acd9b955881ee1dc6e63b9c549a192d613a907f9cbeb"
+        }
+      ]
+    },
+
+    {
+      "name": "pygobject",
+      "buildsystem": "meson",
+      "config-opts": [
+        "-Dpython=python3",
+        "-Dtests=false"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/source/p/pygobject/pygobject-3.48.2.tar.gz",
+          "sha256": "c3c0a7afbe5b2c1c64dc0530109b4dd571085153dbedfbccb8ec7c5ad233f977"
+        }
+      ]
+    },
+
+    {
+      "name": "python-wheels-tools",
+      "buildsystem": "simple",
+      "build-options": { "no-network": true },
+      "build-commands": [
+        "/app/bin/python3 -m pip install --no-index --find-links=file://${PWD} --prefix=/app setuptools==69.5.1 wheel==0.43.0"
+      ],
+      "sources": [
+        {
+          "type": "file",
+          "url": "https://files.pythonhosted.org/packages/py3/s/setuptools/setuptools-69.5.1-py3-none-any.whl",
+          "sha256": "c636ac361bc47580504644275c9ad802c50415c7522212252c033bd15f301f32"
+        },
+        {
+          "type": "file",
+          "url": "https://files.pythonhosted.org/packages/py3/w/wheel/wheel-0.43.0-py3-none-any.whl",
+          "sha256": "55c570405f142630c6b9f72fe09d9b67cf1477fcf543ae5b8dcb1f5b7377da81"
+        }
+      ]
+    },
+
+    {
+      "name": "python-deps",
+      "buildsystem": "simple",
+      "build-options": {
+        "no-network": true,
+        "env": {
+          "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+          "PIP_NO_BUILD_ISOLATION": "1",
+          "PKG_CONFIG_PATH": "/app/lib/pkgconfig:/app/share/pkgconfig",
+          "CFLAGS": "-I/app/include",
+          "LDFLAGS": "-L/app/lib"
+        }
+      },
+      "build-commands": [
+        "/app/bin/python3 -m pip install --no-index --find-links=file://${PWD} --prefix=/app PyMuPDF==1.26.0",
+        "/app/bin/python3 -m pip install --no-index --find-links=file://${PWD} --prefix=/app regex==2024.9.11",
+        "/app/bin/python3 -m pip install --no-index --find-links=file://${PWD} --prefix=/app pdftotext==2.2.2"
+      ],
+      "sources": [
+        {
+          "type": "file",
+          "url": "https://files.pythonhosted.org/packages/bb/86/959057f3cbbff4a7a00a8214f9f1787f6f708bd3c63091b47a95f1ae4053/pymupdf-1.26.0-cp39-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+          "sha256": "a3f6a45fcf8177763a2629a2ab2cad326e8950a0d120b174b56369365355a2a7"
+        },
+        {
+          "type": "file",
+          "url": "https://files.pythonhosted.org/packages/29/52/84662b6636061277cb857f658518aa7db6672bc6d1a3f503ccd5aefc581e/regex-2024.9.11-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+          "sha256": "85ab7824093d8f10d44330fe1e6493f756f252d145323dd17ab6b48733ff6c0a"
+        },
+        {
+          "type": "file",
+          "url": "https://files.pythonhosted.org/packages/e0/e3/79a2ad7ca71160fb6442772155389881672c98bd44c6022303ce242cbfb9/pdftotext-2.2.2.tar.gz",
+          "sha256": "2a9aa89bc62022408781b39d188fabf5a3ad1103b6630f32c4e27e395f7966ee"
+        }
+      ]
+    },
+
+    {
+      "name": "dog-ear-style",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -Dm644 style.css /app/share/io.github.jessemcgowan.DogEar/style.css"
+      ],
+      "sources": [
+        { "type": "file", "path": "data/style.css", "dest-filename": "style.css" }
+      ]
+    },
+
+    {
+      "name": "dog-ear",
+      "buildsystem": "simple",
+      "build-commands": [
+        "install -Dm644 data/io.github.jessemcgowan.DogEar.desktop /app/share/applications/io.github.jessemcgowan.DogEar.desktop",
+        "install -Dm644 data/io.github.jessemcgowan.DogEar.metainfo.xml /app/share/metainfo/io.github.jessemcgowan.DogEar.metainfo.xml",
+        "install -Dm644 data/icons/hicolor/16x16/apps/io.github.jessemcgowan.DogEar.png /app/share/icons/hicolor/16x16/apps/io.github.jessemcgowan.DogEar.png",
+        "install -Dm644 data/icons/hicolor/24x24/apps/io.github.jessemcgowan.DogEar.png /app/share/icons/hicolor/24x24/apps/io.github.jessemcgowan.DogEar.png",
+        "install -Dm644 data/icons/hicolor/32x32/apps/io.github.jessemcgowan.DogEar.png /app/share/icons/hicolor/32x32/apps/io.github.jessemcgowan.DogEar.png",
+        "install -Dm644 data/icons/hicolor/48x48/apps/io.github.jessemcgowan.DogEar.png /app/share/icons/hicolor/48x48/apps/io.github.jessemcgowan.DogEar.png",
+        "install -Dm644 data/icons/hicolor/64x64/apps/io.github.jessemcgowan.DogEar.png /app/share/icons/hicolor/64x64/apps/io.github.jessemcgowan.DogEar.png",
+        "install -Dm644 data/icons/hicolor/128x128/apps/io.github.jessemcgowan.DogEar.png /app/share/icons/hicolor/128x128/apps/io.github.jessemcgowan.DogEar.png",
+        "install -Dm644 data/icons/hicolor/256x256/apps/io.github.jessemcgowan.DogEar.png /app/share/icons/hicolor/256x256/apps/io.github.jessemcgowan.DogEar.png",
+        "install -Dm644 data/icons/hicolor/512x512/apps/io.github.jessemcgowan.DogEar.png /app/share/icons/hicolor/512x512/apps/io.github.jessemcgowan.DogEar.png",
+        "install -Dm755 data/dog-ear /app/bin/dog-ear",
+        "install -d /app/share/io.github.jessemcgowan.DogEar",
+        "install -d /app/share/io.github.jessemcgowan.DogEar/regexes",
+        "install -d /app/share/io.github.jessemcgowan.DogEar/post_processing",
+        "install -d /app/share/io.github.jessemcgowan.DogEar/input_seed",
+        "install -Dm644 pdf_marker.py /app/share/io.github.jessemcgowan.DogEar/pdf_marker.py",
+        "install -Dm644 pdfoutline_mod.py /app/share/io.github.jessemcgowan.DogEar/pdfoutline_mod.py",
+        "install -Dm644 toc_creator.py /app/share/io.github.jessemcgowan.DogEar/toc_creator.py",
+        "install -Dm644 about_window.py /app/share/io.github.jessemcgowan.DogEar/about_window.py",
+        "install -Dm644 copy_by_number.py /app/share/io.github.jessemcgowan.DogEar/copy_by_number.py",
+        "[ -d regexes ] && cp -a regexes/. /app/share/io.github.jessemcgowan.DogEar/regexes/ || true",
+        "[ -d post_processing ] && cp -a post_processing/. /app/share/io.github.jessemcgowan.DogEar/post_processing/ || true",
+        "[ -d input_seed ] && cp -a input_seed/. /app/share/io.github.jessemcgowan.DogEar/input_seed/ || true"
+      ],
+      "sources": [
+        { "type": "dir", "path": "." }
+      ]
+    }
+  ]
+}
+
