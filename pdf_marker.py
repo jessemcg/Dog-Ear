@@ -582,13 +582,25 @@ class DogEarWindow(Adw.ApplicationWindow):
         dlog(f"STATUS: {text}")
         GLib.idle_add(self.status.set_text, text)
 
-    def _spinner(self, which: str, running: bool):
-        sp = self.spinner_toc if which == "toc" else self.spinner_bm
-        GLib.idle_add(sp.start if running else sp.stop)
-
-    def _set_status_label(self, which: str, text: str):
+    def _begin_action(self, which: str):
         lbl = self.lbl_toc_status if which == "toc" else self.lbl_bm_status
-        GLib.idle_add(lbl.set_text, text)
+        spinner = self.spinner_toc if which == "toc" else self.spinner_bm
+        lbl.set_text("")
+        spinner.start()
+        self.row_toc.set_sensitive(False)
+        self.row_bm.set_sensitive(False)
+
+    def _finish_action(self, which: str, status: str):
+        def _update():
+            lbl = self.lbl_toc_status if which == "toc" else self.lbl_bm_status
+            spinner = self.spinner_toc if which == "toc" else self.spinner_bm
+            lbl.set_text(status)
+            spinner.stop()
+            self.row_toc.set_sensitive(True)
+            self.row_bm.set_sensitive(True)
+            return False
+
+        GLib.idle_add(_update)
 
     def _reset_toc_file(self):
         Path(shm_toc_dir).mkdir(parents=True, exist_ok=True)
@@ -649,26 +661,17 @@ class DogEarWindow(Adw.ApplicationWindow):
         self._load_toc_from_disk()
 
     # ── Long-running actions ──────────────────────────────────────────────────
-    def _disable_action_rows(self, enabled: bool):
-        GLib.idle_add(self.row_toc.set_sensitive, enabled)
-        GLib.idle_add(self.row_bm.set_sensitive, enabled)
-
     def _on_row_create_toc(self, *_):
+        self._begin_action("toc")
         threading.Thread(target=self._run_create_toc, daemon=True).start()
 
     def _run_create_toc(self):
-        self._disable_action_rows(False)
-        self._set_status_label("toc", "Idle")
-        self._spinner("toc", True)
         try:
             self._do_create_toc()
-            self._set_status_label("toc", "Done")
+            self._finish_action("toc", "Done")
         except Exception as e:
-            self._set_status_label("toc", "Error")
+            self._finish_action("toc", "Error")
             self._set_status(f"Create TOC failed: {e}")
-        finally:
-            self._spinner("toc", False)
-            self._disable_action_rows(True)
 
     def _do_create_toc(self):
         # Ensure required dirs exist
@@ -711,21 +714,16 @@ class DogEarWindow(Adw.ApplicationWindow):
         self._load_toc_from_disk()
 
     def _on_row_create_bookmarks(self, *_):
+        self._begin_action("bm")
         threading.Thread(target=self._run_create_bookmarks, daemon=True).start()
 
     def _run_create_bookmarks(self):
-        self._disable_action_rows(False)
-        self._set_status_label("bm", "Idle")
-        self._spinner("bm", True)
         try:
             self._do_create_bookmarks()
-            self._set_status_label("bm", "Done")
+            self._finish_action("bm", "Done")
         except Exception as e:
-            self._set_status_label("bm", "Error")
+            self._finish_action("bm", "Error")
             self._set_status(f"Create Bookmarks failed: {e}")
-        finally:
-            self._spinner("bm", False)
-            self._disable_action_rows(True)
 
     def _do_create_bookmarks(self):
         self._write_buffer_to_disk_immediate()
