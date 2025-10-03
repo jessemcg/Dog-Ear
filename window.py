@@ -443,45 +443,52 @@ class DogEarWindow(Adw.ApplicationWindow):
             os.makedirs(path, exist_ok=True)
             uri = dir_uri(path)
 
-            if hasattr(Gtk, "UriLauncher"):
-                launcher = Gtk.UriLauncher.new(uri)
+            if hasattr(Gtk, "FileLauncher"):
+                file = Gio.File.new_for_path(path)
+                launcher = Gtk.FileLauncher.new(file)
 
-                def done(launcher_obj: Gtk.UriLauncher, result: Gio.AsyncResult) -> None:
+                def done(launcher_obj: Gtk.FileLauncher, result: Gio.AsyncResult) -> None:
                     try:
                         ok = launcher_obj.launch_finish(result)
                         if not ok:
-                            try:
-                                Gio.AppInfo.launch_default_for_uri(uri, None)
-                                return
-                            except Exception:
-                                pass
-                            subprocess.run(["xdg-open", uri], check=True)
+                            self._launch_uri(uri, path)
                     except Exception:
-                        try:
-                            Gio.AppInfo.launch_default_for_uri(uri, None)
-                            return
-                        except Exception:
-                            pass
-                        try:
-                            subprocess.run(["xdg-open", uri], check=True)
-                        except Exception as exc_inner:
-                            self._set_status(f"Open failed: {path} — {exc_inner}")
+                        self._launch_uri(uri, path)
 
                 launcher.launch(self, None, done)
                 return
 
-            try:
-                Gio.AppInfo.launch_default_for_uri(uri, None)
-                return
-            except Exception:
-                pass
+            self._launch_uri(uri, path)
+        except Exception as exc:
+            self._set_status(f"Open failed: {path} — {exc}")
 
-            try:
-                subprocess.run(["xdg-open", uri], check=True)
-                return
-            except Exception as exc:
-                self._set_status(f"Open failed: {path} — {exc}")
+    def _launch_uri(self, uri: str, path: str) -> None:
+        if hasattr(Gtk, "UriLauncher"):
+            launcher = Gtk.UriLauncher.new(uri)
 
+            def done(launcher_obj: Gtk.UriLauncher, result: Gio.AsyncResult) -> None:
+                try:
+                    ok = launcher_obj.launch_finish(result)
+                    if not ok:
+                        self._launch_uri_fallback(uri, path)
+                except Exception:
+                    self._launch_uri_fallback(uri, path)
+
+            launcher.launch(self, None, done)
+            return
+
+        self._launch_uri_fallback(uri, path)
+
+    def _launch_uri_fallback(self, uri: str, path: str) -> None:
+        try:
+            Gio.AppInfo.launch_default_for_uri(uri, None)
+            return
+        except Exception:
+            pass
+
+        try:
+            subprocess.run(["xdg-open", uri], check=True)
+            return
         except Exception as exc:
             self._set_status(f"Open failed: {path} — {exc}")
 
