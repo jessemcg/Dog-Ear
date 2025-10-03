@@ -107,9 +107,9 @@ class AppContext:
     input_folder: str = field(init=False)
     user_regex_dir: str = field(init=False)
     user_post_dir: str = field(init=False)
-    downloads_base: str = field(init=False)
     completed_host: str = field(init=False)
     host_view_text: str = field(init=False)
+    shm_completed_dir: str = field(init=False)
     shm_root: str = field(init=False)
     shm_text_dir: str = field(init=False)
     shm_toc_dir: str = field(init=False)
@@ -127,17 +127,17 @@ class AppContext:
         self.user_regex_dir = _xdg(self.app_slug, "config", "regexes")
         self.user_post_dir = _xdg(self.app_slug, "config", "post_processing")
 
-        downloads_dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DOWNLOAD)
-        self.downloads_base = downloads_dir or os.path.expanduser("~/Downloads")
-        self.completed_host = os.path.join(self.downloads_base, COMPLETED_DIRNAME)
-        self.host_view_text = os.path.join(self.downloads_base, TEXTPAGES_DIRNAME)
-
         self.shm_root = _runtime_root(self.app_slug)
         self.shm_text_dir = os.path.join(self.shm_root, "TextPages")
         self.shm_toc_dir = os.path.join(self.shm_root, "TOC")
+        self.shm_completed_dir = os.path.join(self.shm_root, COMPLETED_DIRNAME)
         self.toc_file_path = os.path.join(self.shm_toc_dir, "toc.txt")
         self.combined_pdf_path = os.path.join(self.shm_root, "combined_tmp.pdf")
-        self.completed_record_pdf = os.path.join(self.completed_host, "bookmarked.pdf")
+        self.completed_record_pdf = os.path.join(self.shm_completed_dir, "bookmarked.pdf")
+
+        persist_root = _xdg(self.app_slug, "data", "output")
+        self.completed_host = os.path.join(persist_root, COMPLETED_DIRNAME)
+        self.host_view_text = os.path.join(persist_root, TEXTPAGES_DIRNAME)
 
     # ── Seeding & directory helpers ────────────────────────────────────────
     def seed_user_data(self) -> tuple[bool, bool, bool]:
@@ -160,6 +160,7 @@ class AppContext:
                 self.input_folder,
                 self.user_regex_dir,
                 self.user_post_dir,
+                self.shm_completed_dir,
                 self.completed_host,
                 self.host_view_text,
             ):

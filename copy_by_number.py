@@ -1,6 +1,7 @@
 # copy_by_number.py
 from __future__ import annotations
 import os
+import tempfile
 from pathlib import Path
 
 import gi
@@ -20,7 +21,7 @@ class CopyByNumber:
           1) self.text_record_folder (if your app sets it)
           2) global 'shm_text_dir' (if defined elsewhere)
           3) env PDFMARKER_TEXT_PAGES_DIR
-          4) ~/Downloads/DogEar_TextPages  (fallback)
+          4) runtime temp dir / DogEar_TextPages (fallback)
         """
         if hasattr(self, "text_record_folder"):
             return getattr(self, "text_record_folder")
@@ -30,7 +31,10 @@ class CopyByNumber:
         env_dir = os.environ.get("PDFMARKER_TEXT_PAGES_DIR")
         if env_dir:
             return env_dir
-        return str(Path.home() / "Downloads" / "DogEar_TextPages")
+        runtime_root = os.environ.get("XDG_RUNTIME_DIR")
+        if runtime_root:
+            return os.path.join(runtime_root, "DogEar", "DogEar_TextPages")
+        return str(Path(tempfile.gettempdir()) / "DogEar_TextPages")
 
     @staticmethod
     def _format_page_filename(self, n: int) -> str:
