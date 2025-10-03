@@ -433,6 +433,7 @@ class DogEarWindow(Adw.ApplicationWindow):
             self.scripts_box.append(button)
 
     def _on_run_script_clicked(self, _button: Gtk.Button, script_path: str) -> None:
+        self._write_buffer_to_disk_immediate()
         threading.Thread(
             target=self.runner.run_script_in_toc_dir,
             args=(script_path,),
