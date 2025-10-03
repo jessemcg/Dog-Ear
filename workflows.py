@@ -42,22 +42,31 @@ class WorkflowRunner:
                     pass
 
             try:
-                for entry in list(Path(self._ctx.shm_text_dir).iterdir()):
-                    try:
-                        if entry.is_file() or entry.is_symlink():
-                            entry.unlink()
-                        else:
-                            shutil.rmtree(entry)
-                    except Exception:
-                        pass
-            except Exception:
-                pass
-
-            try:
                 if os.path.exists(self._ctx.combined_pdf_path):
                     os.remove(self._ctx.combined_pdf_path)
             except Exception:
                 pass
+
+            try:
+                if os.path.exists(self._ctx.completed_record_pdf):
+                    os.remove(self._ctx.completed_record_pdf)
+            except Exception:
+                pass
+
+            for folder in (self._ctx.shm_text_dir, self._ctx.host_view_text, self._ctx.completed_host):
+                try:
+                    path_obj = Path(folder)
+                    path_obj.mkdir(parents=True, exist_ok=True)
+                    for entry in list(path_obj.iterdir()):
+                        try:
+                            if entry.is_file() or entry.is_symlink():
+                                entry.unlink()
+                            else:
+                                shutil.rmtree(entry)
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
 
             self._reset_toc()
             self._load_toc()
@@ -92,6 +101,7 @@ class WorkflowRunner:
             self._ctx.shm_root,
             self._ctx.shm_text_dir,
             self._ctx.shm_toc_dir,
+            self._ctx.shm_completed_dir,
             self._ctx.input_folder,
         ):
             Path(folder).mkdir(parents=True, exist_ok=True)
@@ -126,14 +136,17 @@ class WorkflowRunner:
         )
 
         self._load_toc()
+        self.mirror_tree(self._ctx.shm_text_dir, self._ctx.host_view_text)
 
     def create_bookmarks(self) -> None:
+        Path(self._ctx.shm_completed_dir).mkdir(parents=True, exist_ok=True)
         pdfoutline(
             inpdf=self._ctx.combined_pdf_path,
             tocfile=self._ctx.toc_file_path,
             outpdf=self._ctx.completed_record_pdf,
             update_progress=lambda fraction: None,
         )
+        self.mirror_tree(self._ctx.shm_completed_dir, self._ctx.completed_host)
 
     # ── Scripting helpers ─────────────────────────────────────────────────
     def run_script_in_toc_dir(self, script_path: str) -> None:
@@ -163,6 +176,7 @@ class WorkflowRunner:
                 )
 
             self._load_toc()
+            self.mirror_tree(self._ctx.shm_text_dir, self._ctx.host_view_text)
 
             output = (process.stdout or "").strip()
             base = os.path.basename(script_path)
@@ -171,4 +185,31 @@ class WorkflowRunner:
             )
         except Exception as exc:
             self._set_status(f"Script failed: {exc}")
+
+    # ── File utilities ─────────────────────────────────────────────────────
+    def mirror_tree(self, src: str, dst: str) -> None:
+        try:
+            if not os.path.isdir(src):
+                os.makedirs(dst, exist_ok=True)
+                return
+
+            os.makedirs(dst, exist_ok=True)
+            for name in os.listdir(dst):
+                target = os.path.join(dst, name)
+                try:
+                    shutil.rmtree(target) if os.path.isdir(target) else os.remove(target)
+                except Exception:
+                    pass
+            for name in os.listdir(src):
+                source = os.path.join(src, name)
+                target = os.path.join(dst, name)
+                try:
+                    if os.path.isdir(source):
+                        shutil.copytree(source, target)
+                    else:
+                        shutil.copy2(source, target)
+                except Exception:
+                    pass
+        except Exception as exc:
+            self._set_status(f"Mirror failed: {exc}")
 

@@ -128,7 +128,10 @@ class DogEarWindow(Adw.ApplicationWindow):
 
         self.row_toc.connect("activated", self._on_row_create_toc)
         self.row_bm.connect("activated", self._on_row_create_bookmarks)
-        self.row_dir.connect("activated", lambda *_: self._open_path(None, self.ctx.completed_host))
+        self.row_dir.connect(
+            "activated",
+            lambda *_: self._open_path(None, self.ctx.completed_host, self.ctx.shm_completed_dir),
+        )
 
         editor_section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         editor_section.set_vexpand(True)
@@ -209,10 +212,20 @@ class DogEarWindow(Adw.ApplicationWindow):
         ensure("open_input", lambda *_: self._open_path(None, self.ctx.input_folder))
         ensure("open_regex", lambda *_: self._open_path(None, self.ctx.user_regex_dir))
         ensure("open_posts", lambda *_: self._open_path(None, self.ctx.user_post_dir))
-        ensure("open_text", lambda *_: self._open_path(None, self.ctx.shm_text_dir))
+        ensure(
+            "open_text",
+            lambda *_: self._open_path(
+                None, self.ctx.host_view_text, self.ctx.shm_text_dir
+            ),
+        )
         ensure("copy_text_number", self._on_copy_text_number)
         ensure("copy_regex_pattern", self._on_copy_regex_pattern)
-        ensure("open_completed", lambda *_: self._open_path(None, self.ctx.completed_host))
+        ensure(
+            "open_completed",
+            lambda *_: self._open_path(
+                None, self.ctx.completed_host, self.ctx.shm_completed_dir
+            ),
+        )
         ensure("about", self._on_about)
 
     def _build_app_menu(self) -> Gtk.PopoverMenu:
@@ -438,8 +451,10 @@ class DogEarWindow(Adw.ApplicationWindow):
             daemon=True,
         ).start()
 
-    def _open_path(self, _button, path: str) -> None:
+    def _open_path(self, _button, path: str, refresh_from: str | None = None) -> None:
         try:
+            if refresh_from:
+                self.runner.mirror_tree(refresh_from, path)
             os.makedirs(path, exist_ok=True)
             uri = dir_uri(path)
 
