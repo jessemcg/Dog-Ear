@@ -45,7 +45,8 @@
         "-DENABLE_QT6=OFF",
         "-DENABLE_UNSTABLE_API_ABI_HEADERS=OFF",
         "-DENABLE_LIBOPENJPEG=openjpeg2",
-        "-DENABLE_BOOST=OFF"
+        "-DENABLE_BOOST=OFF",
+        "-DCMAKE_INSTALL_LIBDIR=lib"
       ],
       "sources": [
         {
