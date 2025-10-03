@@ -759,7 +759,10 @@ class DogEarWindow(Adw.ApplicationWindow):
             self.scripts_box.append(btn)
 
     def _on_run_script_clicked(self, _btn, script_path: str):
-        threading.Thread(target=self._run_script_in_toc_dir, args=(script_path,), daemon=True).start()
+        self._write_buffer_to_disk_immediate()
+        threading.Thread(
+            target=self._run_script_in_toc_dir, args=(script_path,), daemon=True
+        ).start()
 
     def _run_script_in_toc_dir(self, script_path: str):
         try:
