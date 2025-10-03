@@ -128,9 +128,7 @@ class DogEarWindow(Adw.ApplicationWindow):
 
         self.row_toc.connect("activated", self._on_row_create_toc)
         self.row_bm.connect("activated", self._on_row_create_bookmarks)
-        self.row_dir.connect(
-            "activated", lambda *_: self._open_path(None, self.ctx.completed_host, False)
-        )
+        self.row_dir.connect("activated", lambda *_: self._open_path(None, self.ctx.completed_host))
 
         editor_section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         editor_section.set_vexpand(True)
@@ -208,13 +206,13 @@ class DogEarWindow(Adw.ApplicationWindow):
                 action.connect("activate", handler)
                 app.add_action(action)
 
-        ensure("open_input", lambda *_: self._open_path(None, self.ctx.input_folder, False))
-        ensure("open_regex", lambda *_: self._open_path(None, self.ctx.user_regex_dir, False))
-        ensure("open_posts", lambda *_: self._open_path(None, self.ctx.user_post_dir, False))
-        ensure("open_text", lambda *_: self._open_path(None, self.ctx.shm_text_dir, True))
+        ensure("open_input", lambda *_: self._open_path(None, self.ctx.input_folder))
+        ensure("open_regex", lambda *_: self._open_path(None, self.ctx.user_regex_dir))
+        ensure("open_posts", lambda *_: self._open_path(None, self.ctx.user_post_dir))
+        ensure("open_text", lambda *_: self._open_path(None, self.ctx.shm_text_dir))
         ensure("copy_text_number", self._on_copy_text_number)
         ensure("copy_regex_pattern", self._on_copy_regex_pattern)
-        ensure("open_completed", lambda *_: self._open_path(None, self.ctx.completed_host, False))
+        ensure("open_completed", lambda *_: self._open_path(None, self.ctx.completed_host))
         ensure("about", self._on_about)
 
     def _build_app_menu(self) -> Gtk.PopoverMenu:
@@ -440,15 +438,10 @@ class DogEarWindow(Adw.ApplicationWindow):
             daemon=True,
         ).start()
 
-    def _open_path(self, _button, path: str, mirror: bool) -> None:
+    def _open_path(self, _button, path: str) -> None:
         try:
             os.makedirs(path, exist_ok=True)
-            open_path = path
-            if mirror and os.path.abspath(path) == os.path.abspath(self.ctx.shm_text_dir):
-                self.runner.mirror_tree(path, self.ctx.host_view_text)
-                open_path = self.ctx.host_view_text
-
-            uri = dir_uri(open_path)
+            uri = dir_uri(path)
 
             if hasattr(Gtk, "UriLauncher"):
                 launcher = Gtk.UriLauncher.new(uri)
@@ -472,7 +465,7 @@ class DogEarWindow(Adw.ApplicationWindow):
                         try:
                             subprocess.run(["xdg-open", uri], check=True)
                         except Exception as exc_inner:
-                            self._set_status(f"Open failed: {open_path} — {exc_inner}")
+                            self._set_status(f"Open failed: {path} — {exc_inner}")
 
                 launcher.launch(self, None, done)
                 return
@@ -487,7 +480,7 @@ class DogEarWindow(Adw.ApplicationWindow):
                 subprocess.run(["xdg-open", uri], check=True)
                 return
             except Exception as exc:
-                self._set_status(f"Open failed: {open_path} — {exc}")
+                self._set_status(f"Open failed: {path} — {exc}")
 
         except Exception as exc:
             self._set_status(f"Open failed: {path} — {exc}")
